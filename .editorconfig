@@ -1,0 +1,11 @@
+# Root most editor format
+root = true
+
+# Any file format
+[*]
+end_of_line = lf # Unix style
+insert_final_newline = true
+charset = utf-8
+# JavaScript style
+indent_style = space
+indent_size = 2
