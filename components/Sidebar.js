@@ -1,95 +1,124 @@
-import { Avatar, IconButton, Button } from '@material-ui/core'
+import { Avatar, IconButton, Button } from "@material-ui/core";
 import styled from "styled-components";
 import ChatIcon from "@material-ui/icons/Chat";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
 import SearchIcon from "@material-ui/icons/Search";
 import * as EmailValidator from "email-validator";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth, db } from "../firebase";
+import { doc, query, collection, where, addDoc } from "firebase/firestore";
+import { useCollection } from "react-firebase-hooks/firestore";
+import Chat from "/components/Chat";
 
 function Sidebar() {
-    const createChat = () => {
-        const input = prompt("Please enter an email address for the user you wish to chat with");
+  const [user] = useAuthState(auth);
+  const userChatRef = query(
+    collection(db, "chats"),
+    where("users", "array-contains", user.email)
+  );
+  const [chatsSnapshot] = useCollection(userChatRef);
 
-        if (!input) return null;
+  const createChat = () => {
+    const input = prompt(
+      "Please enter an email address for the user you wish to chat with"
+    );
 
-        // validate email and check if user exists
-        if (EmailValidator.validate(input)) {
-            // add the chat into the DB "chats" collection if it doesn't already exist and is valid
-            
-        }
-    };
-    return (
+    if (!input) return null;
+
+    if (
+      EmailValidator.validate(input) &&
+      !chatAlreadyExists(input) &&
+      input !== user.email
+    ) {
+      // add the chat into the DB "chats" collection
+      addDoc(collection(db, "chats"), {
+        users: [user.email, input],
+      });
+    }
+  };
+
+  const chatAlreadyExists = (recipientEmail) =>
+    !!chatsSnapshot?.docs.find(
+      (chat) =>
+        chat.data().users.find((user) => user === recipientEmail)?.length > 0
+    );
+
+  return (
     <Container>
-        <Header>
-            <UserAvatar />
-            <IconsContainer>
-                <IconButton>
-                    <ChatIcon />
-                </IconButton>
-                <IconButton>
-                    <MoreVertIcon />
-                </IconButton>                    
-            </IconsContainer>
-        </Header>
+      <Header>
+        <UserAvatar src={user.photoURL} onClick={() => auth.signOut()} />
+        <IconsContainer>
+          <IconButton>
+            <ChatIcon />
+          </IconButton>
+          <IconButton>
+            <MoreVertIcon />
+          </IconButton>
+        </IconsContainer>
+      </Header>
 
-        <Search>
-            <SearchIcon />
-            <SearchInput placeholder="Search in chats" />
-        </Search>
+      <Search>
+        <SearchIcon />
+        <SearchInput placeholder="Search in chats" />
+      </Search>
 
-        <SidebarButton onClick={createChat}>Start a new chat</SidebarButton>
+      <SidebarButton onClick={createChat}>Start a new chat</SidebarButton>
 
-        {/* List of Chats */}
+      {/* List of Chats */}
+      {chatsSnapshot?.docs.map((chat) => (
+        <Chat key={chat.id} id={chat.id} users={chat.data().users} />
+      ))}
     </Container>
-    )
+  );
 }
 
-export default Sidebar
+export default Sidebar;
 
 // Applies CSS style to components
 
 const Container = styled.div``;
 
 const SidebarButton = styled(Button)`
-    width: 100%;
-    &&& {
-        border-top: 1px solid whitesmoke;
-        border-bottom: 1px solid whitesmoke;
-    }
+  width: 100%;
+  &&& {
+    border-top: 1px solid whitesmoke;
+    border-bottom: 1px solid whitesmoke;
+  }
 `;
 
 const Search = styled.div`
-    display: flex;
-    align-items: center;
-    padding: 20px;
-    border-radius: 2px;
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border-radius: 2px;
 `;
 
 const SearchInput = styled.input`
-    outline-width: 0;
-    border: none;
-    flex: 1;
+  outline-width: 0;
+  border: none;
+  flex: 1;
 `;
 
 const Header = styled.div`
-    display: flex;
-    position: sticky;
-    top: 0;
-    background-color: white;
-    z-index: 1;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px;
-    height: 80px;
-    border-bottom: 1px solid whitesmoke;
+  display: flex;
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 1;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  height: 80px;
+  border-bottom: 1px solid whitesmoke;
 `;
 
 const UserAvatar = styled(Avatar)`
-    cursor: pointer;
-    :hover {
-        opacity: 0.8;
-    }
+  cursor: pointer;
+  :hover {
+    opacity: 0.8;
+  }
 `;
 
 const IconsContainer = styled.div`
-    display: flex;
+  display: flex;
 `;
