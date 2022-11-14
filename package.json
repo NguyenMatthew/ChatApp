@@ -13,11 +13,13 @@
     "@material-ui/icons": "^4.11.3",
     "better-react-spinkit": "^2.0.4",
     "email-validator": "^2.0.4",
-    "firebase": "^9.13.0",
+    "firebase": "^9.14.0",
+    "moment": "^2.29.4",
     "next": "13.0.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-firebase-hooks": "^5.0.3",
-    "styled-components": "^5.3.6"
+    "styled-components": "^5.3.6",
+    "timeago-react": "^3.0.5"
   }
 }
